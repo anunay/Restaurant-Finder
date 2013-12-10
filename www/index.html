@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Ionic List Example</title>
+
+    <!-- Sets initial viewport load and disables zooming  -->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link href="css/ionic.css" rel="stylesheet">
+
+
+    <!-- ionic/angularjs scripts -->
+    <script src="js/ionic.js"></script>
+    <script src="js/angular/angular.js"></script>
+    <script src="js/angular/angular-animate.js"></script>
+    <script src="js/angular/angular-route.js"></script>
+    <script src="js/angular/angular-touch.js"></script>
+    <script src="js/angular/angular-sanitize.js"></script>
+    <script src="js/ionic-angular.js"></script>
+    <script src="http://www.flocations.com/static/vendor/angular-ui/event/event.js"></script>
+
+    <!-- #3rd party libraries -->
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB16sGmIekuGIvYOfNoW9T44377IU2d2Es&sensor=true"></script>
+    <script type="text/javascript" src="js/map-ui.min.js"></script>
+    <script type="text/javascript" src="js/ng-infinite-scroll.js"></script>
+    <script src="http://tombatossals.github.io/angular-leaflet-directive/examples/leaflet/leaflet.js"></script>
+    <script src="http://tombatossals.github.io/angular-leaflet-directive/dist/angular-leaflet-directive.min.js"></script>
+    <script src="http://tombatossals.github.io/angular-leaflet-directive/examples/plugins/Leaflet.label/leaflet.label.js"></script>
+    <link rel="stylesheet" href="http://tombatossals.github.io/angular-leaflet-directive/examples/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="http://tombatossals.github.io/angular-leaflet-directive/examples/plugins/Leaflet.label/leaflet.label.css" />
+
+    <!-- your app's script -->
+    <script src="js/app.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/controllers.js"></script>
+  </head>
+
+  <!--
+    'restaurantModule' is the name of this angular module (app.js)
+    'nav-router' attribute updates the nav-bar title and animations as you navigate
+    'animation' attribute sets which type of animations to use
+  -->
+  <body ng-app="restaurantModule" nav-router animation="slide-left-right-ios7">
+
+    <!-- The nav bar that will be updated as we navigate -->
+    <nav-bar
+      class="nav-title-slide-ios7"
+      type="bar-positive"
+      back-button-type="button-icon"
+      back-button-icon="ion-arrow-left-c"></nav-bar>
+
+    <!-- where the content of each page will be rendered -->
+    <!--<ng-view></ng-view>-->
+    <div ng-view></div>
+
+
+    <!--
+      Belows are examples of using inline angular templates:
+      http://docs.angularjs.org/api/ng.directive:script
+    -->
+
+    <!--
+      This template loads when the the root '/' url is matched (app.js)
+      'restaurants' is a $scope variable which was created in restaurantIndexCtrl (controllers.js)
+      The restaurantIndexCtrl gets data from the restaurantService (service.js)
+    -->
+    <script type="text/ng-template" id="/list.html">
+      <nav-page title="title">
+        <content has-header="true">
+          <div infinite-scroll='nextPage()' infinite-scroll-disabled='$scope.busy' infinite-scroll-distance='5'>
+            <list class="list ionic">
+              <link-item ng-repeat="restaurant in restaurants" href="#/restaurant/{{restaurant.ID}}" type="item searchlist item-avatar" data-index={{$index}}>
+                <img src="img/pin.png" class="pin" />
+                <!--<img src="http://static.touristonline.dk/billeder/{{restaurant.U}}/{{restaurant.BI}}">-->
+                <span class="dist">{{findDistance(lat1,lon1,restaurant.GC.Y,restaurant.GC.X)}} </span>
+
+                <h2>{{ restaurant.FN }}</h2>
+                <p>{{ restaurant.A1 + " " + restaurant.PN  + ", " +  restaurant.B }}</p>
+              </item>
+            </list>
+            <div ng-show='restaurantService.busy'>Loading data...</div>
+          </div>
+        </content>
+      </nav-page>
+    </script>
+
+    <!--
+      This template loads when the '/restaurant/:restaurantId' url is matched (app.js)
+      'restaurant' is a $scope variable which was created in restaurantDetailCtrl (controllers.js)
+      The restaurantDetailCtrl gets data from the restaurantService (service.js)
+    -->
+    <script type="text/ng-template" id="/details.html">
+      <nav-page title="title">
+        <content has-header="true" padding="false">
+          <div class="list card">
+
+            <div class="item">
+              <h2><strong>{{ restaurant.FN }}</strong></h2>
+              <p>{{ restaurant.A1 + " " + restaurant.PN  + ", " +  restaurant.B }}</p>
+            </div>
+
+            <div class="item item-body">
+              <img class="full-image" src="http://static.touristonline.dk/billeder/{{restaurant.U}}/{{restaurant.BI}}">
+              <p>
+                {{ restaurant.VB }}
+              </p>
+            </div>
+
+            <a class="item item-icon-left" href="#/map/{{restaurant.ID}}/{{dateMilliSec}}">
+              <i class="icon ion-ios7-world-outline"></i>
+              Location Map
+            </a>
+
+            <a class="item item-icon-left" href="#">
+              <i class="icon ion-coffee"></i>
+              Food Menu
+            </a>
+
+              <div class="item item-divider">General Information</div>
+              <div class="item">Member of Horesta: <strong>{{restaurant.Details.General.Horesta}}</strong></div>
+              <div class="item">Website: <strong><a target="_blank" href="{{restaurant.Details.General.Website}}">Visit Website</a></strong></div>
+              <div class="item">Type: <strong>{{restaurant.Details.General.Type}}</strong></div>
+              <div class="item">Kitchen: <strong>{{restaurant.Details.General.Kitchen}}</strong></div>
+              <div class="item">Price Level: <strong>{{restaurant.Details.General.PriceLabel}}</strong></div>
+              <div class="item item-divider">Capacity</div>
+              <div class="item">No. of persons in restaurant: <strong>{{restaurant.Details.Capacity.Persons}}</strong></div>
+              <div class="item">No. of Person banqueting room: <strong>{{restaurant.Details.Capacity.LargePerson}}</strong></div>
+              <div class="item">No. of banqueting rooms: <strong>{{restaurant.Details.Capacity.Rooms}}</strong></div>
+
+          </div>
+        </content>
+      </nav-page>
+    </script>
+
+    <script type="text/ng-template" id="/map.html">
+      <nav-page title="title">
+          <content has-header="true" has-footer="false">
+           <!--<div id="map"></div>-->
+                <leaflet center="london" markers="markers" height="700px" width="100%"></leaflet>
+                <!--<div id="map_canvas" ui-map="myMap" style="height:300px;width:400px;border:2px solid #777777;margin:3px; border:1px solid" ui-options="mapOptions" ui-event="{'map-idle' : 'onMapIdle()'}"></div>-->
+           <!-- <div id="map_canvas" ui-map="myMap" class="span8 map" ui-options="mapOptions"></div>-->
+
+          </content>
+      </nav-page>
+    </script>
+
+
+  </body>
+</html>
